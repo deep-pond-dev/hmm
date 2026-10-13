@@ -1,0 +1,20 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - name: Format
+        run: forge fmt --check src test script
+      - name: Build
+        run: forge build --sizes
+      - name: Unit, fuzz and invariant tests
+        run: forge test -vv
