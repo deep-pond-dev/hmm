@@ -1,0 +1,8 @@
+{
+  "name": "hmm",
+  "chainId": 1,
+  "token": "0x876a1beabe50fec6bc64e9e586f3efcc1da44231",
+  "distributor": "0x33246994d3a7129e08be74dd72fb93b85954147c",
+  "claimPage": "#/claim",
+  "site": "https://hmmpond.com"
+}

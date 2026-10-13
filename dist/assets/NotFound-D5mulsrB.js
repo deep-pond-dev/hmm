@@ -1,0 +1,1 @@
+import{j as o}from"./react-CiIjTZBO.js";import{E as t}from"./states-D62_ZICC.js";import"./index-ButsHOU3.js";import"./web3-DZhMbsne.js";function n(){return o.jsx("div",{className:"page page-narrow",children:o.jsx(t,{title:"Nothing in this part of the pond",body:"The page you were looking for isn't here.",cta:{to:"/",label:"Back to the pond"}})})}export{n as default};
