@@ -186,7 +186,7 @@ contract AdversarialHandler is Test {
     }
 
     function rotate(uint256 seed) external {
-        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4, address(mine));
+        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4);
         vm.prank(steward);
         mine.queueConfig(address(next), action);
         vm.warp(block.timestamp + bound(seed, 3 days, 4 days));

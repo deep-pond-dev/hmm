@@ -34,11 +34,6 @@ export const hmmMineAbi = [
         "internalType": "address"
       },
       {
-        "name": "steward_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "dev_",
         "type": "address",
         "internalType": "address"

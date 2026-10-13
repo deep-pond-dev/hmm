@@ -119,7 +119,7 @@ contract SwarmOracleAdapterTest is HmmTestBase {
     /* ───────────── binding ───────────── */
 
     function test_bind_onceAndIdempotent() public {
-        SwarmOracleAdapter fresh = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4, address(0));
+        SwarmOracleAdapter fresh = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4);
         assertEq(fresh.mine(), address(0));
         vm.prank(alice);
         fresh.bind();
@@ -132,7 +132,7 @@ contract SwarmOracleAdapterTest is HmmTestBase {
     }
 
     function test_unboundAdapterRefusesCallbacks() public {
-        SwarmOracleAdapter fresh = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4, address(0));
+        SwarmOracleAdapter fresh = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4);
         SwarmOracleAdapter.Attestation memory a = _attestation();
         bytes memory sig = _sign(a, address(fresh), oraclePk);
         vm.prank(address(intake));
@@ -142,15 +142,15 @@ contract SwarmOracleAdapterTest is HmmTestBase {
 
     function test_constructor_validates() public {
         vm.expectRevert(SwarmOracleAdapter.ZeroAddress.selector);
-        new SwarmOracleAdapter(address(0), oracleSigner, 5, 4, address(0));
+        new SwarmOracleAdapter(address(0), oracleSigner, 5, 4);
         vm.expectRevert(SwarmOracleAdapter.ZeroAddress.selector);
-        new SwarmOracleAdapter(address(intake), address(0), 5, 4, address(0));
+        new SwarmOracleAdapter(address(intake), address(0), 5, 4);
         vm.expectRevert(SwarmOracleAdapter.BadPanelRules.selector);
-        new SwarmOracleAdapter(address(intake), oracleSigner, 5, 1, address(0));
+        new SwarmOracleAdapter(address(intake), oracleSigner, 5, 1);
         vm.expectRevert(SwarmOracleAdapter.BadPanelRules.selector);
-        new SwarmOracleAdapter(address(intake), oracleSigner, 3, 4, address(0));
+        new SwarmOracleAdapter(address(intake), oracleSigner, 3, 4);
         vm.expectRevert(SwarmOracleAdapter.BadPanelRules.selector);
-        new SwarmOracleAdapter(address(intake), oracleSigner, 101, 4, address(0));
+        new SwarmOracleAdapter(address(intake), oracleSigner, 101, 4);
     }
 
     /* ───────────── events a front end reads ───────────── */

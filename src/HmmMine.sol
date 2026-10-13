@@ -25,10 +25,11 @@ import {IHmmMine} from "./interfaces/IHmmMine.sol";
 /// gets one. `devBps` of every round goes to `dev`.
 ///
 /// Trust: the IMD Intake (immutable), and the oracle adapter the question was asked through, which decides whether
-/// an answer counts. A steward, if one is set, can queue a new adapter or action id behind a `CONFIG_DELAY` timelock.
-/// That is a strong power: an adapter decides which questions mine, so a malicious one could take the emission of every
-/// round it controls. It cannot touch claimed rewards, past questions or the backers' IMD of questions proposed before
-/// it (they refuse to be asked under a newer config). Launch with no steward (`address(0)`) for a mine nobody controls.
+/// an answer counts. The mine is deployed with no steward: `steward` starts at zero and only the steward can name one,
+/// so nobody can ever queue a new adapter or action id, and the rules are fixed for good. The timelocked config logic
+/// below (`queueConfig`, `applyConfig`, `setSteward`) is kept as reviewed; it is reachable only in tests, through a
+/// subclass that sets a steward. Were a steward ever set, it could swap the adapter behind a `CONFIG_DELAY` timelock:
+/// a strong power (an adapter decides which questions mine), which is why this mine has none.
 contract HmmMine is IHmmMine, ReentrancyGuardTransient {
     using SafeERC20 for IERC20;
 
@@ -194,7 +195,6 @@ contract HmmMine is IHmmMine, ReentrancyGuardTransient {
     /// @param action_ The oracle action id, `bytes32("oracle.request@oracle-1")` today.
     /// @param forwarder_ The GenesisForwarder that will move the mining reserve in and start the clock.
     /// @param adapter_ The oracle adapter for new questions; bound to this mine here.
-    /// @param steward_ May queue a new adapter or action id behind the timelock; zero for none.
     /// @param dev_ Receives `devBps` of every round.
     /// @param devBps_ Dev share of every round, at most `MAX_DEV_BPS`.
     /// @param roundLength_ Seconds per round (block).
@@ -207,7 +207,6 @@ contract HmmMine is IHmmMine, ReentrancyGuardTransient {
         bytes32 action_,
         address forwarder_,
         address adapter_,
-        address steward_,
         address dev_,
         uint256 devBps_,
         uint256 roundLength_,
@@ -234,10 +233,8 @@ contract HmmMine is IHmmMine, ReentrancyGuardTransient {
         genesisDelay = genesisDelay_;
         action = action_;
         adapter = adapter_;
-        steward = steward_;
 
         IOracleAdapter(adapter_).bind();
-        emit StewardChanged(address(0), steward_);
         emit ConfigApplied(adapter_, action_);
     }
 

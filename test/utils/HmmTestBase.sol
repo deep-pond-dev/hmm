@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+import {HmmMineStewarded} from "./HmmMineStewarded.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 
 import {HmmToken} from "../../src/HmmToken.sol";
@@ -75,8 +76,8 @@ abstract contract HmmTestBase is Test {
     {
         vm.startPrank(factory);
         token = new HmmToken();
-        a = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4, address(0));
-        m = new HmmMine(
+        a = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4);
+        m = new HmmMineStewarded(
             address(token),
             address(imd),
             address(intake),

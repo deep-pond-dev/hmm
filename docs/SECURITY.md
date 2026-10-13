@@ -37,7 +37,7 @@ or anything else after launch. The token has no owner.
 ## Independent review (2026-10-12): findings and fixes
 | # | Severity | Finding | Fix |
 |---|---|---|---|
-| 1 | Medium (key) | A steward-installed adapter can credit questions without oracle answers and fail others, taking future emission. | Launch with no steward. The steward code path is unreachable when it is zero (`test/audit/StewardAdapter.t.sol` shows both). |
+| 1 | Medium (key) | A steward-installed adapter can credit questions without oracle answers and fail others, taking future emission. | The mine has no steward: it takes no steward argument and its steward stays zero, so the steward code path is unreachable (`test/NoSteward.t.sol`; `test/audit/StewardAdapter.t.sol` exercises the path through the test-only `HmmMineStewarded`). |
 | 2 | Medium | The proposer controlled the raw JSON body: a foreign `consumer`, a `deliver`, a tiny panel or a short validity made the answer not count, so the other backers paid for an answer signed for the proposer's contract. | The mine now writes the body itself from a validated `Spec` (printable ASCII question without `"` or `\`, panel ≥ 5, quorum ≥ 4 and a majority, fixed validity, scalar answer types). Injection is impossible by construction (`test_spec_rulesAndInjection`). |
 | 3 | Low | A long list answer was logged in full and could run the callback out of its 200k gas; the answer would be lost. | `Thought` logs `answerHash` and the answer only up to 128 bytes; the answer is hashed once. A 3,000-entry answer is delivered (`test_longAnswer_isCountedAndHashed`). |
 | 4 | Low | Completing a pooled question inside a transaction that already made another Intake request leaves the mine's request unserved. | Completing a question that holds other backers' IMD must come from an account calling directly (`tx.origin`); a contract can still back, or ask with only its own IMD. |
@@ -54,3 +54,17 @@ answers) is kept in `test/audit/AdversarialInvariants.t.sol`.
   one transaction, on purpose, at its own cost; the mine cannot see requests made directly to the Intake.
 - A question whose wording the swarm refuses or cannot agree on spends its IMD. The site runs the swarm's free check
   first and shows its verdict on every open question.
+
+## Launch-readiness change (2026-10-13)
+
+IMD's launch checker refuses any zero-address constructor argument (and stand-ins such as `0x…dead`), and the first
+launch attempt stopped on two that were zero by design. Both parameters were removed instead:
+
+- `SwarmOracleAdapter` takes no `mine_` argument. The mine claims it by calling `bind()` from its constructor, in the
+  same `launchCustom` transaction that deploys both, so nobody can claim it in between (if anyone did, `HmmMine`'s
+  constructor would revert `AlreadyBound` and the whole launch with it). `applyConfig` already bound new adapters itself.
+- `HmmMine` takes no `steward_` argument; `steward` starts and stays zero, and only the steward can name one.
+
+Logic is otherwise unchanged. Regression tests: `test/NoSteward.t.sol` (no steward and nobody can name one; the adapter
+cannot be claimed once the mine has it; the launch arguments carry no zero address). `launch/build.mjs` also refuses a
+zero or `0x…dead` address in any constructor argument.

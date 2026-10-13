@@ -34,13 +34,14 @@ const ACTION = hex32("oracle.request@oracle-1");
 const forwarder = lower(cfg.forwarder);
 const steward = lower(cfg.steward);
 const NO_STEWARD = steward === "0x0000000000000000000000000000000000000000";
+if (!NO_STEWARD) throw new Error("HmmMine takes no steward argument: config.steward must be the zero address");
 const dev = lower(cfg.dev);
 const poolBps = Number(cfg.poolBps);
 if (poolBps !== Number(num("POOL_BPS"))) throw new Error("poolBps differs from HmmLaunch.POOL_BPS");
 const cap = BigInt(cfg.initialMarketCapWei);
 if (cap < 250n * 10n ** 18n || cap > 250_000n * 10n ** 18n) throw new Error("IMD opening cap must be 250-250,000 IMD");
 
-const adapterArgs = [INTAKE, SIGNER, num("MIN_PANEL"), num("MIN_QUORUM"), "0x0000000000000000000000000000000000000000"];
+const adapterArgs = [INTAKE, SIGNER, num("MIN_PANEL"), num("MIN_QUORUM")];
 const mineArgs = [
   "$token",
   IMD,
@@ -48,13 +49,16 @@ const mineArgs = [
   ACTION,
   forwarder,
   "$contract:SwarmOracleAdapter",
-  steward,
   dev,
   num("DEV_BPS"),
   num("ROUND_LENGTH"),
   num("ERA_LENGTH"),
   num("GENESIS_DELAY"),
 ];
+// IMD's launch checker refuses any zero-address constructor argument (and stand-ins such as 0x...dead).
+for (const a of [...adapterArgs, ...mineArgs]) {
+  if (/^0x0{40}$/i.test(a) || /^0x0{36}dead$/i.test(a)) throw new Error(`zero or stand-in address in constructorArgs: ${a}`);
+}
 const q = (a) => "[" + a.map((x) => JSON.stringify(x)).join(", ") + "]";
 const capImd = (cap / 10n ** 18n).toLocaleString("en-US");
 
@@ -66,13 +70,13 @@ Application contracts, in this order:
 1. SwarmOracleAdapter (src/SwarmOracleAdapter.sol), constructorArgs ${q(adapterArgs)}
 2. HmmMine (src/HmmMine.sol), constructorArgs ${q(mineArgs)}
 
-HmmMine's constructor calls bind() on the SwarmOracleAdapter deployed just before it (an earlier contract of this launch); it moves no tokens. The fourth HmmMine argument is bytes32("oracle.request@oracle-1").
+SwarmOracleAdapter takes no mine argument: HmmMine's constructor calls bind() on the SwarmOracleAdapter deployed just before it (an earlier contract of this launch, in the same transaction), which claims it; it moves no tokens. No constructor argument is the zero address. The fourth HmmMine argument is bytes32("oracle.request@oracle-1").
 
 Economics, copied into launch.json exactly: poolBps ${poolBps}, initialMarketCapWei ${cap} (${capImd} IMD), remainderTo ${forwarder}.
 
 The remainder goes to the GenesisForwarder at ${forwarder}, deployed earlier from src/GenesisForwarder.sol with registry ${REGISTRY} and mineName bytes32("HmmMine"). After launch, anyone calls forward(launchNumber): it reads this launch from the registry, checks the HmmMine artifact mines this token and names this forwarder, moves the whole remainder into it and starts mining.
 
-What it does: HMM is mined by asking the IMD swarm. Anyone proposes a question in HmmMine (the mine writes the oracle.request JSON itself from validated fields) and backs it with IMD; once it holds the Intake price it is asked through the IMD Intake (requestWithFailure) with SwarmOracleAdapter as the callback target. Answers signed by the IMD oracle signer for the adapter (panel >= 5, quorum >= 4, agreed >= quorum and a majority) credit the current 10-minute round; backers share the round's emission pro-rata to IMD paid. Emission halves every 180 days and never exceeds the reserve; 5% of each round goes to the dev address. ${NO_STEWARD ? "The steward argument is the zero address: nobody can change the adapter, the action id or any rule after launch; there are no owner powers at all." : "A steward can queue a new adapter or action id behind a 3-day timelock, for new questions."}
+What it does: HMM is mined by asking the IMD swarm. Anyone proposes a question in HmmMine (the mine writes the oracle.request JSON itself from validated fields) and backs it with IMD; once it holds the Intake price it is asked through the IMD Intake (requestWithFailure) with SwarmOracleAdapter as the callback target. Answers signed by the IMD oracle signer for the adapter (panel >= 5, quorum >= 4, agreed >= quorum and a majority) credit the current 10-minute round; backers share the round's emission pro-rata to IMD paid. Emission halves every 180 days and never exceeds the reserve; 5% of each round goes to the dev address. ${NO_STEWARD ? "HmmMine has no steward: it takes no steward argument and its steward stays zero forever, so nobody can change the adapter, the action id or any rule after launch; there are no owner powers at all." : "A steward can queue a new adapter or action id behind a 3-day timelock, for new questions."}
 
 Keep contract logic, names, constructor arguments, fee rules and permissions exactly as they are; adapt the Foundry project only as much as the launch factory requires. The test suite (forge test) must stay green.`;
 

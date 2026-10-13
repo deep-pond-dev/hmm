@@ -34,12 +34,50 @@ for (;;) {
         console.log(JSON.stringify(art, null, 2));
         const mine = art.HmmMine;
         if (mine) {
-          const abi = parseAbi(["function forwarder() view returns (address)", "function started() view returns (bool)", "function token() view returns (address)", "function steward() view returns (address)", "function dev() view returns (address)"]);
-          const [fwd, started, token, steward, dev] = await Promise.all(
-            ["forwarder", "started", "token", "steward", "dev"].map((f) => pub.readContract({ address: mine, abi, functionName: f })),
+          const abi = parseAbi([
+            "function forwarder() view returns (address)",
+            "function started() view returns (bool)",
+            "function token() view returns (address)",
+            "function steward() view returns (address)",
+            "function dev() view returns (address)",
+            "function devBps() view returns (uint256)",
+          ]);
+          const read = (f) => pub.readContract({ address: mine, abi, functionName: f });
+          const [fwd, started, token, steward, dev, devBps] = await Promise.all(
+            ["forwarder", "started", "token", "steward", "dev", "devBps"].map(read),
           );
-          const ok = fwd.toLowerCase() === cfg.forwarder.toLowerCase() && token.toLowerCase() === art.HmmToken?.toLowerCase();
-          console.log({ forwarder: fwd, started, token, steward, dev, wiredRight: ok });
+          // The launch's LP fee stream (1% of pool volume) goes to the factory's recorded requester for this launch.
+          const factoryAbi = parseAbi([
+            "function positionOf(uint64) view returns ((address,address,uint24,int24,address),int24,int24,address)",
+          ]);
+          const FACTORY = "0xfF03410d0Fe5fa8f7F59F743de35E333D9857120";
+          const [, , , requester] = await pub.readContract({
+            address: FACTORY, abi: factoryAbi, functionName: "positionOf", args: [BigInt(l.launchNumber)],
+          });
+          const erc20 = parseAbi(["function balanceOf(address) view returns (uint256)", "function totalSupply() view returns (uint256)"]);
+          const hmm = art.HmmToken;
+          const [supply, fwdBal] = hmm
+            ? await Promise.all([
+                pub.readContract({ address: hmm, abi: erc20, functionName: "totalSupply" }),
+                pub.readContract({ address: hmm, abi: erc20, functionName: "balanceOf", args: [cfg.forwarder] }),
+              ])
+            : [0n, 0n];
+          const eq = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+          const checks = {
+            "mine names our forwarder": eq(fwd, cfg.forwarder),
+            "mine mines the launch token": eq(token, hmm),
+            "mine not started yet": started === false,
+            "no steward": eq(steward, cfg.steward),
+            "dev share goes to our dev wallet": eq(dev, cfg.dev),
+            "dev share is 5% (500 bps)": devBps === 500n,
+            "LP fee stream goes to our launcher": eq(requester, cfg.launcher),
+            "supply is 1B HMM": supply === 10n ** 27n,
+            "forwarder holds the ~65% reserve": fwdBal >= (10n ** 27n * 6500n) / 10000n && fwdBal < (10n ** 27n * 6510n) / 10000n,
+          };
+          for (const [k, v] of Object.entries(checks)) console.log(`${v ? "ok  " : "FAIL"} ${k}`);
+          console.log({ forwarder: fwd, token, steward, dev, devBps: devBps.toString(), requester, forwarderHmm: fwdBal.toString() });
+          const ok = Object.values(checks).every(Boolean);
+          console.log(ok ? "\nall checks passed" : "\nSOME CHECKS FAILED: do not forward until this is understood");
           console.log(`\nnext: cast send ${cfg.forwarder} "forward(uint64)" ${l.launchNumber} --account hmm-launcher --password-file ~/.hmm/hmm-launcher.password --rpc-url $MAINNET_RPC_URL`);
         }
         process.exit(0);

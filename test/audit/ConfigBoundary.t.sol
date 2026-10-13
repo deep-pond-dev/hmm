@@ -16,7 +16,7 @@ contract AuditConfigBoundaryTest is HmmTestBase {
         vm.prank(alice, alice);
         uint256 id = mine.propose(_spec("written for oracle-1 and the 5/4 adapter"), 0.25 ether);
 
-        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 7, 6, address(mine));
+        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 7, 6);
         bytes32 nextAction = bytes32("oracle.request@oracle-2");
         vm.prank(owner);
         intake.setPrice(nextAction, address(imd), PRICE);

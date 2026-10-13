@@ -86,18 +86,15 @@ contract SwarmOracleAdapter is IOracleAdapter {
     /// @param signer_ The swarm's oracle signer (0x5598aa9146215bc13eb26f2c692ad1461fd32982 on 2026-10-12).
     /// @param minPanel_ Fewest panel members an answer needs.
     /// @param minQuorum_ Lowest quorum an answer needs.
-    /// @param mine_ The mine, or zero to let the first `bind()` caller (the mine's constructor) claim it.
-    constructor(address intake_, address signer_, uint256 minPanel_, uint256 minQuorum_, address mine_) {
+    /// @dev No mine argument: the mine claims this adapter by calling `bind()` from its own constructor, which a launch
+    /// runs in the same transaction as this deployment. (IMD's launch checker refuses zero-address arguments.)
+    constructor(address intake_, address signer_, uint256 minPanel_, uint256 minQuorum_) {
         if (intake_ == address(0) || signer_ == address(0)) revert ZeroAddress();
         if (minQuorum_ < 2 || minPanel_ < minQuorum_ || minPanel_ > 100) revert BadPanelRules();
         intake = IIntake(intake_);
         signer = signer_;
         minPanel = uint16(minPanel_);
         minQuorum = uint16(minQuorum_);
-        if (mine_ != address(0)) {
-            mine = mine_;
-            emit Bound(mine_);
-        }
     }
 
     /// @inheritdoc IOracleAdapter

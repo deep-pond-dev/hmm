@@ -34,7 +34,7 @@ library HmmLaunch {
 
     struct Roles {
         address forwarder; // GenesisForwarder, the launch's remainderTo
-        address steward; // may queue a new adapter behind the timelock; zero for none
+        address steward; // unused: HmmMine takes no steward argument (kept so callers' roles stay the same)
         address dev; // receives the dev share of every round
         address oracleSigner; // the swarm's oracle signer (a test key on forks and the devnet)
         address intake;
@@ -55,7 +55,7 @@ library HmmLaunch {
     }
 
     function adapterArgs(Roles memory r) internal pure returns (bytes memory) {
-        return abi.encode(r.intake, r.oracleSigner, MIN_PANEL, MIN_QUORUM, address(0));
+        return abi.encode(r.intake, r.oracleSigner, MIN_PANEL, MIN_QUORUM);
     }
 
     function mineArgs(Roles memory r, address token, address adapter) internal pure returns (bytes memory) {
@@ -66,7 +66,6 @@ library HmmLaunch {
             ACTION,
             r.forwarder,
             adapter,
-            r.steward,
             r.dev,
             DEV_BPS,
             ROUND_LENGTH,

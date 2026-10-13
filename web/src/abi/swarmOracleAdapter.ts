@@ -22,11 +22,6 @@ export const swarmOracleAdapterAbi = [
         "name": "minQuorum_",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "mine_",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"

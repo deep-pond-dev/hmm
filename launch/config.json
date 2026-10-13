@@ -8,5 +8,5 @@
   "poolBps": 2500,
   "initialMarketCapWei": "10000000000000000000000",
   "repoUrl": "https://github.com/deep-pond-dev/hmm",
-  "baseCommit": "e3be2bf0c8d91dc7024239fa755c25bdcd57c4be"
+  "baseCommit": "f7bbf55f28d95c525ce6be0d4214d9aaa319f1ab"
 }

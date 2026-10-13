@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
+import {HmmMineStewarded} from "./utils/HmmMineStewarded.sol";
 import {HmmTestBase} from "./utils/HmmTestBase.sol";
 import {HmmMine} from "../src/HmmMine.sol";
 import {HmmToken} from "../src/HmmToken.sol";
@@ -76,7 +77,7 @@ contract HmmMineTest is HmmTestBase {
 
     function test_constructor_validates() public {
         vm.expectRevert(HmmMine.DevShareTooHigh.selector);
-        new HmmMine(
+        new HmmMineStewarded(
             address(hmm),
             address(imd),
             address(intake),
@@ -91,7 +92,7 @@ contract HmmMineTest is HmmTestBase {
             0
         );
         vm.expectRevert(HmmMine.BadSchedule.selector);
-        new HmmMine(
+        new HmmMineStewarded(
             address(hmm),
             address(imd),
             address(intake),
@@ -106,7 +107,7 @@ contract HmmMineTest is HmmTestBase {
             0
         );
         vm.expectRevert(HmmMine.BadSchedule.selector);
-        new HmmMine(
+        new HmmMineStewarded(
             address(hmm),
             address(imd),
             address(intake),
@@ -121,7 +122,7 @@ contract HmmMineTest is HmmTestBase {
             0
         );
         vm.expectRevert(HmmMine.ZeroAction.selector);
-        new HmmMine(
+        new HmmMineStewarded(
             address(hmm),
             address(imd),
             address(intake),
@@ -136,7 +137,7 @@ contract HmmMineTest is HmmTestBase {
             0
         );
         vm.expectRevert(HmmMine.ZeroAddress.selector);
-        new HmmMine(
+        new HmmMineStewarded(
             address(hmm),
             address(imd),
             address(intake),
@@ -152,7 +153,7 @@ contract HmmMineTest is HmmTestBase {
         );
         // the adapter is already bound to `mine`
         vm.expectRevert(abi.encodeWithSelector(SwarmOracleAdapter.AlreadyBound.selector, address(mine)));
-        new HmmMine(
+        new HmmMineStewarded(
             address(hmm),
             address(imd),
             address(intake),
@@ -768,7 +769,7 @@ contract HmmMineTest is HmmTestBase {
     function test_config_queueApplyAfterDelay_newQuestionsOnly() public {
         (uint256 old, bytes32 ridOld) = _ask(alice, "asked through the first adapter");
 
-        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 7, 5, address(mine));
+        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 7, 5);
         bytes32 nextAction = bytes32("oracle.request@oracle-2");
         vm.prank(owner);
         intake.setPrice(nextAction, address(imd), PRICE);
@@ -799,7 +800,7 @@ contract HmmMineTest is HmmTestBase {
     }
 
     function test_config_cancel_andRenounce() public {
-        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4, address(mine));
+        SwarmOracleAdapter next = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4);
         vm.startPrank(steward);
         mine.queueConfig(address(next), ACTION);
         mine.cancelConfig();
@@ -814,7 +815,9 @@ contract HmmMineTest is HmmTestBase {
     }
 
     function test_config_refusesAnAdapterBoundToAnotherMine() public {
-        SwarmOracleAdapter other = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4, address(0xdead));
+        SwarmOracleAdapter other = new SwarmOracleAdapter(address(intake), oracleSigner, 5, 4);
+        vm.prank(address(0xdead));
+        other.bind();
         vm.prank(steward);
         mine.queueConfig(address(other), ACTION);
         vm.warp(block.timestamp + 3 days);
