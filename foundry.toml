@@ -19,7 +19,7 @@ remappings = [
 isolate = true
 # Mainnet-fork tests run under FOUNDRY_PROFILE=fork.
 no_match_path = "test/fork/**"
-fs_permissions = [{ access = "read-write", path = "./deployments" }, { access = "read", path = "./test/fixtures" }, { access = "read", path = "./launch" }]
+fs_permissions = [{ access = "read", path = "./test/fixtures" }, { access = "read", path = "./launch" }]
 
 [profile.default.fuzz]
 runs = 2000
@@ -28,6 +28,11 @@ runs = 2000
 runs = 256
 depth = 80
 fail_on_revert = true
+
+# The local devnet script writes deployments/devnet.json; the IMD swarm's workers refuse write access in the default
+# profile, so it lives here: FOUNDRY_PROFILE=devnet (devnet/start.sh sets it).
+[profile.devnet]
+fs_permissions = [{ access = "read-write", path = "./deployments" }, { access = "read", path = "./launch" }]
 
 [profile.fork]
 match_path = "test/fork/**"

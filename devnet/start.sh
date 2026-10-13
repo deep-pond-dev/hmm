@@ -26,7 +26,7 @@ for _ in $(seq 1 60); do
 done
 echo "anvil fork up on :$PORT at block $(cast block-number --rpc-url "http://127.0.0.1:$PORT")"
 
-DEVNET_RPC_URL="http://127.0.0.1:$PORT" forge script script/Devnet.s.sol --rpc-url "http://127.0.0.1:$PORT" \
+FOUNDRY_PROFILE=devnet DEVNET_RPC_URL="http://127.0.0.1:$PORT" forge script script/Devnet.s.sol --rpc-url "http://127.0.0.1:$PORT" \
   --broadcast --unlocked --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --slow > "$RUN/deploy.log" 2>&1 \
   || { tail -30 "$RUN/deploy.log"; exit 1; }
 grep -E "hmm devnet" "$RUN/deploy.log" || true

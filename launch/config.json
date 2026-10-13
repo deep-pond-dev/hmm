@@ -7,6 +7,6 @@
   "launcher": "0x39C593c1bC4d91E42d797456077586f6058eBf67",
   "poolBps": 2500,
   "initialMarketCapWei": "10000000000000000000000",
-  "repoUrl": "https://github.com/REPLACE_WITH_PUBLIC_ACCOUNT/hmm",
-  "baseCommit": "REPLACE_WITH_40_HEX_COMMIT"
+  "repoUrl": "https://github.com/deep-pond-dev/hmm",
+  "baseCommit": "4bf84b90b703661fbae359127d32de0cf7a8efac"
 }
