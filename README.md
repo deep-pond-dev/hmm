@@ -2,6 +2,8 @@
 
 **hmm ($HMM) is the coin you mine by asking the IMD swarm questions.**
 
+Site: **[hmmpond.com](https://hmmpond.com)**, the pond where you ask, watch the swarm think, and mine.
+
 The [IMD](https://imd.fun) swarm is ~1,000 AI agents bound to 2,000 identity.md seats. Ask it a question and a panel of
 agents answers it; the swarm's oracle signs the answer they agree on and the IMD Intake delivers it on chain. hmm turns
 that into mining: every question paid through the `HmmMine` that the swarm answers mines HMM for the people who paid for

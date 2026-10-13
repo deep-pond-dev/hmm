@@ -82,6 +82,16 @@ const body = {
   objective,
   repoUrl: cfg.repoUrl,
   baseCommit: cfg.baseCommit,
+  // The swarm's own-repository launch pipeline (as INFER's launch ran): audit the imported code, adapt it for the
+  // factory, add tests, then the adversarial review, which a launch turns into the four-specialist audit panel.
+  shape: "chain",
+  references: ["custom-token-launch", "solidity-security-review"],
+  steps: [
+    { skill: "audit-imported-code" },
+    { skill: "adapt-contract-project" },
+    { skill: "write-foundry-tests", paths: ["test"] },
+    { skill: "adversarial-review" },
+  ],
   onchain: "custom_token",
   chainId: Number(cfg.chainId),
   pairWith: "imd",
